@@ -45,7 +45,6 @@ These apply to this and all sibling skills:
 9. **Refine with real execution** -- Run the skill against real tasks, feed results back, iterate.
 10. **Match specificity to fragility** -- Be prescriptive for fragile operations; give freedom where multiple approaches work.
 
-
 <!-- caveman-directive -->
 
 Terse like caveman. Technical substance exact. Only fluff die.
