@@ -1,51 +1,57 @@
-# hermes-forgecode
+# hermes-gemini
 
 [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-Spec%20Compliant-blue)](https://agentskills.io)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-An [Agent Skills](https://agentskills.io)-compatible skill that teaches AI agents how to delegate coding tasks to [Forge](https://forgecode.dev) -- an open-source terminal AI coding environment supporting 300+ LLMs.
+An [Agent Skills](https://agentskills.io)-compatible skill that teaches AI agents how to delegate coding tasks to [Gemini CLI](https://github.com/google-gemini/gemini-cli) -- Google's open-source terminal AI coding environment.
 
 ## Why This Skill?
 
-Forge is a powerful coding agent, but it has non-obvious conventions that trip up automated orchestration:
+Gemini CLI is a powerful coding agent, but it has non-obvious conventions that trip up automated orchestration:
 
-- It's a **TUI app** -- running `forge` without `-p` opens interactive mode and blocks the shell
-- The **ZSH `:` prefix** doesn't work in non-interactive shells -- you must use `forge -p "..."`
-- There's **no `--model` CLI flag** -- models are set via config or environment variables
-- **Three specialized agents** (forge, sage, muse) have distinct capabilities worth orchestrating as a pipeline
+- It's a **TUI app** -- running `gemini` without `-p` opens interactive REPL and blocks the shell
+- **Plan mode** is read-only but CAN write `.md` plan files -- not all file writes are blocked
+- **Free tier has hard limits** -- 60 req/min, 1000 req/day with Google OAuth
+- **Approval modes** replace separate agents -- `plan` mode handles both research and planning
+- **`--worktree` is experimental** -- requires enabling in settings.json first
+- **Sandbox is container-based** -- Docker/Podman/Seatbelt, not git worktrees like other tools
+- **`yolo` mode is CLI-only** -- cannot be set in settings.json for safety
 
-This skill packages all of that knowledge so any Agent Skills-compatible AI can delegate to Forge effectively.
+This skill packages all of that knowledge so any Agent Skills-compatible AI can delegate to Gemini CLI effectively.
 
 ## What You Get
 
 | Capability | Description |
 |---|---|
-| **One-shot execution** | `forge -p "..."` for non-interactive, scriptable tasks |
+| **One-shot execution** | `gemini -p "..."` for non-interactive, scriptable tasks |
 | **Interactive TUI sessions** | tmux-based multi-turn conversation when needed |
-| **Research agent** | `--agent sage` for read-only codebase analysis |
-| **Planning agent** | `--agent muse` for architecture plans written to `plans/` |
-| **Implementation agent** | Default `forge` agent that writes code, runs tests, commits |
-| **Parallel work** | Git worktree patterns for concurrent independent tasks |
-| **Sandboxed experiments** | `--sandbox` for isolated branches with automatic cleanup |
+| **JSON output** | `--output-format json` for programmatic parsing |
+| **Stream JSON** | `--output-format stream-json` for real-time event monitoring |
+| **Plan mode** | `--approval-mode=plan` for read-only research + planning |
+| **Approval modes** | `default`, `auto_edit`, `plan`, `yolo` for different trust levels |
+| **Parallel work** | `--worktree` flag or git worktree patterns for concurrent tasks |
+| **Sandboxed experiments** | `--sandbox` for container-based isolation |
+| **Free tier** | Google OAuth gives 60 req/min, 1000 req/day -- no API key needed |
 
 ## Quick Start
 
 ```bash
 # Install the skill
-git clone https://github.com/luandro/hermes-forgecode ~/hermes/skills/hermes-forgecode
+git clone https://github.com/luandro/hermes-gemini ~/hermes/skills/hermes-gemini
 
-# Or for Forge itself
-git clone https://github.com/luandro/hermes-forgecode .forge/skills/hermes-forgecode
+# Or for Gemini CLI itself
+git clone https://github.com/luandro/hermes-gemini .gemini/skills/hermes-gemini
 
 # Or for Claude Code
-git clone https://github.com/luandro/hermes-forgecode ~/.claude/skills/hermes-forgecode
+git clone https://github.com/luandro/hermes-gemini ~/.claude/skills/hermes-gemini
 ```
 
 **Requirements:**
 
-- [Forge CLI](https://forgecode.dev) -- `curl -fsSL https://forgecode.dev/cli | sh`
+- [Gemini CLI](https://github.com/google-gemini/gemini-cli) -- `npm install -g @google/gemini-cli` (also: `brew install gemini-cli`, `npx @google/gemini-cli`)
 - `tmux` (optional) -- for interactive multi-turn sessions
 - `git` (optional) -- for worktree-based parallel patterns
+- Docker or Podman (optional) -- for sandbox isolation
 
 ## Usage Examples
 
@@ -54,34 +60,27 @@ git clone https://github.com/luandro/hermes-forgecode ~/.claude/skills/hermes-fo
 ```python
 result = computer(
     action="bash",
-    command='forge -p "Add rate limiting on /api/login using a Redis sliding window."',
+    command='gemini -p "Add rate limiting on /api/login using a Redis sliding window."',
     workdir="/path/to/repo"
 )
 ```
 
-### Research, Plan, Then Implement
+### Plan, Then Implement
 
 The recommended pipeline for non-trivial tasks:
 
 ```python
-# 1. Research (read-only, safe)
-research = computer(
-    action="bash",
-    command='forge --agent sage -p "How does session management work? Trace login to expiry."',
-    workdir="/path/to/repo"
-)
-
-# 2. Plan (writes to plans/, no source code changes)
+# 1. Research + Plan (read-only, writes plan .md)
 plan = computer(
     action="bash",
-    command='forge --agent muse -p "Design OAuth2 integration based on the current session system."',
+    command='gemini --approval-mode=plan -p "Research the session management system and design an OAuth2 integration plan."',
     workdir="/path/to/repo"
 )
 
-# 3. Implement (executes the plan)
+# 2. Implement (executes the plan)
 result = computer(
     action="bash",
-    command='forge -p "Execute the plan in plans/plan.md"',
+    command='gemini -p "Execute the plan from the plans directory."',
     workdir="/path/to/repo"
 )
 ```
@@ -91,62 +90,81 @@ result = computer(
 ```python
 import subprocess
 
-# Create isolated worktrees
-subprocess.run(['git', 'worktree', 'add', '/tmp/feat-auth', '-b', 'feat/auth'], cwd='/repo')
-subprocess.run(['git', 'worktree', 'add', '/tmp/feat-api', '-b', 'feat/api'], cwd='/repo')
-
-# Launch parallel agents
-p1 = subprocess.Popen(['forge', '-p', 'Implement OAuth2 authentication'], cwd='/tmp/feat-auth')
-p2 = subprocess.Popen(['forge', '-p', 'Design REST API endpoints for users'], cwd='/tmp/feat-api')
-
+# Using --worktree flag (requires experimental.worktrees in settings.json)
+p1 = subprocess.Popen(['gemini', '-w', '-p', 'Implement OAuth2 authentication'], cwd='/repo')
+p2 = subprocess.Popen(['gemini', '-w', '-p', 'Design REST API endpoints'], cwd='/repo')
 p1.wait(); p2.wait()
+```
+
+### AI Git Commit
+
+```python
+# No built-in commit command -- use the pipe pattern
+result = computer(
+    action="bash",
+    command='git diff --staged | gemini -p "Write a conventional commit message for these changes."',
+    workdir="/path/to/repo"
+)
 ```
 
 ## Files
 
 ```
-hermes-forgecode/
-├── SKILL.md                    # Core skill -- execution modes, agents, workflows, rules
+hermes-gemini/
+├── SKILL.md                    # Core skill -- execution modes, approval modes, workflows, rules
 └── references/
-    ├── cli-reference.md        # Full CLI flags, subcommands, env vars, config
-    └── agent-patterns.md       # sage→muse→forge pipeline, parallel workers, validation loops
+    ├── cli-reference.md        # Full CLI flags, slash commands, settings.json, env vars, auth
+    └── agent-patterns.md       # plan→implement pipeline, parallel workers, validation loops
 ```
 
 The skill uses [progressive disclosure](https://agentskills.io/specification#progressive-disclosure): agents load `SKILL.md` on activation, then read reference files only when the task calls for them.
 
-## Built-In Agents
+## Approval Modes
 
-| Agent | CLI Flag | Purpose | Modifies Files? |
+| Mode | CLI Flag | Purpose | Modifies Files? |
 |---|---|---|---|
-| `forge` | *(default)* | Implementation: builds features, fixes bugs, runs tests | Yes |
-| `sage` | `--agent sage` | Research: maps architecture, traces data flow | No |
-| `muse` | `--agent muse` | Planning: analyzes structure, writes plans to `plans/` | No |
+| `default` | *(default)* | Implementation with confirmation prompts | Yes (with approval) |
+| `auto_edit` | `--approval-mode=auto_edit` | Auto-approve edits, confirm shell commands | Yes |
+| `plan` | `--approval-mode=plan` | Read-only research + planning. Writes `.md` plans | plans/ only |
+| `yolo` | `--yolo` | Auto-approve ALL actions. CLI flag only | Yes |
 
 ## Configuration
 
-**`.forge.toml`** (project root or `~/forge/.forge.toml`):
+**`settings.json`** (at `~/.gemini/settings.json` or `.gemini/settings.json`):
 
-```toml
-[session]
-model = "claude-3.7-sonnet"
-
-[agent]
-custom_instructions = """
-Always add error handling.
-Use conventional commits.
-Run tests after changes.
-"""
+```json
+{
+  "model": {
+    "name": "auto"
+  },
+  "general": {
+    "defaultApprovalMode": "default",
+    "plan": {
+      "enabled": true,
+      "directory": ".gemini/plans",
+      "modelRouting": true
+    },
+    "checkpointing": {
+      "enabled": true
+    }
+  },
+  "tools": {
+    "sandbox": true
+  },
+  "experimental": {
+    "worktrees": true
+  }
+}
 ```
 
 **Key environment variables:**
 
 ```bash
-FORGE_TOOL_TIMEOUT=300          # Max seconds per tool call
-FORGE_HTTP_READ_TIMEOUT=900     # Increase for long implementations
-FORGE_RETRY_MAX_ATTEMPTS=3      # API retry count
-FORGE_TRACKER=false             # Disable telemetry
-FORGE_SESSION__MODEL_ID=haiku   # Override model
-FORGE_SESSION__PROVIDER_ID=open_router  # Override provider
+GEMINI_API_KEY=your-key           # API key auth
+GOOGLE_API_KEY=your-key           # Alternative API key env var
+GEMINI_SANDBOX=docker             # Force sandbox method
+GOOGLE_GENAI_USE_VERTEXAI=true    # Use Vertex AI
+DEBUG=true                        # Debug logging
 ```
 
 ## Related Skills
@@ -157,4 +175,4 @@ FORGE_SESSION__PROVIDER_ID=open_router  # Override provider
 
 ## License
 
-MIT
+Apache 2.0

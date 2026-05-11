@@ -1,33 +1,33 @@
-# Project: hermes-forgecode
+# Project: hermes-gemini
 
-Agent Skills-compatible skill for delegating coding tasks to the Forge CLI.
+Agent Skills-compatible skill for delegating coding tasks to the Gemini CLI.
 
 ## Architecture
 
-- `SKILL.md` -- Agent-facing instructions (execution modes, agents, workflows, rules, gotchas). Loaded on skill activation.
-- `references/cli-reference.md` -- Full CLI flags, subcommands, config. Loaded on demand.
-- `references/agent-patterns.md` -- Multi-agent orchestration patterns (sage→muse→forge, parallel workers, validation loops). Loaded on demand.
-- `hermes-forgecode.skill` -- Zip package bundling SKILL.md + references for distribution.
+- `SKILL.md` -- Agent-facing instructions (execution modes, approval modes, workflows, rules, gotchas). Loaded on skill activation.
+- `references/cli-reference.md` -- Full CLI flags, slash commands, settings.json reference. Loaded on demand.
+- `references/agent-patterns.md` -- Multi-step orchestration patterns (plan→implement pipeline, parallel workers, validation loops). Loaded on demand.
+- `hermes-gemini.skill` -- Zip package bundling SKILL.md + references for distribution.
 - `README.md` -- Human-facing overview (not loaded by agents).
 
 ## Conventions
 
 - Frontmatter in SKILL.md follows the [Agent Skills specification](https://agentskills.io/specification): `name`, `description`, `license`, `compatibility`, `metadata` in YAML.
-- Description includes trigger keywords for agent discovery (forge, forgecode, coding agent, sage, muse).
+- Description includes trigger keywords for agent discovery (gemini, gemini-cli, coding agent, google, terminal ai, plan mode).
 - Code examples use Python `computer(action="bash", ...)` syntax for hermes-agent compatibility.
-- Gotchas section is the highest-value content -- every non-obvious behavior forge exhibits in non-interactive mode.
+- Gotchas section is the highest-value content -- every non-obvious behavior gemini exhibits in non-interactive mode.
 
 ## Key Commands
 
 ```bash
 # Validate skill against spec
-skills-ref validate ./hermes-forgecode
+skills-ref validate ./hermes-gemini
 
 # Rebuild .skill package
-cd hermes-forgecode && zip -r ../hermes-forgecode.skill SKILL.md references/
+cd hermes-gemini && zip -r ../hermes-gemini.skill SKILL.md references/
 
 # Check package contents
-unzip -l hermes-forgecode.skill
+unzip -l hermes-gemini.skill
 ```
 
 ## Skill Writing Best Practices (from agentskills.io)
@@ -54,4 +54,3 @@ Fragments OK. Short synonyms. Code unchanged.
 Pattern: [thing] [action] [reason]. [next step].
 ACTIVE EVERY RESPONSE. No revert after many turns. No filler drift.
 Code/commits/PRs: normal. Off: "stop caveman" @[/] "normal mode".
-

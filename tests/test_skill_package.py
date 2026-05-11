@@ -13,7 +13,7 @@ import zipfile
 import pytest
 
 SKILL_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SKILL_PACKAGE = os.path.join(SKILL_ROOT, "hermes-forgecode.skill")
+SKILL_PACKAGE = os.path.join(SKILL_ROOT, "hermes-gemini.skill")
 
 
 class TestSkillPackageExists:
@@ -21,15 +21,15 @@ class TestSkillPackageExists:
 
     def test_skill_package_exists(self) -> None:
         assert os.path.isfile(SKILL_PACKAGE), (
-            f"hermes-forgecode.skill not found at {SKILL_PACKAGE}. "
-            "Run: cd hermes-forgecode && zip -r ./hermes-forgecode.skill SKILL.md references/"
+            f"hermes-gemini.skill not found at {SKILL_PACKAGE}. "
+            "Run: cd hermes-gemini && zip -r ../hermes-gemini.skill SKILL.md references/"
         )
 
     def test_skill_package_is_valid_zip(self) -> None:
         if not os.path.isfile(SKILL_PACKAGE):
-            pytest.skip("hermes-forgecode.skill not built yet")
+            pytest.skip("hermes-gemini.skill not built yet")
         assert zipfile.is_zipfile(SKILL_PACKAGE), (
-            "hermes-forgecode.skill is not a valid zip file"
+            "hermes-gemini.skill is not a valid zip file"
         )
 
 
@@ -44,7 +44,7 @@ class TestSkillPackageContents:
 
     def test_package_contains_all_expected_files(self) -> None:
         if not os.path.isfile(SKILL_PACKAGE):
-            pytest.skip("hermes-forgecode.skill not built yet")
+            pytest.skip("hermes-gemini.skill not built yet")
 
         with zipfile.ZipFile(SKILL_PACKAGE, "r") as zf:
             names = zf.namelist()
@@ -55,14 +55,14 @@ class TestSkillPackageContents:
                 missing.append(expected)
 
         assert not missing, (
-            f"Files missing from hermes-forgecode.skill: {missing}. "
-            "Run: cd hermes-forgecode && zip -r ./hermes-forgecode.skill SKILL.md references/"
+            f"Files missing from hermes-gemini.skill: {missing}. "
+            "Run: cd hermes-gemini && zip -r ../hermes-gemini.skill SKILL.md references/"
         )
 
     def test_no_unexpected_files(self) -> None:
         """Verify the package doesn't contain extraneous files."""
         if not os.path.isfile(SKILL_PACKAGE):
-            pytest.skip("hermes-forgecode.skill not built yet")
+            pytest.skip("hermes-gemini.skill not built yet")
 
         with zipfile.ZipFile(SKILL_PACKAGE, "r") as zf:
             names = zf.namelist()
@@ -77,7 +77,7 @@ class TestSkillPackageContents:
             unexpected.append(name)
 
         assert not unexpected, (
-            f"Unexpected files in hermes-forgecode.skill: {unexpected}"
+            f"Unexpected files in hermes-gemini.skill: {unexpected}"
         )
 
 
@@ -86,7 +86,7 @@ class TestSkillPackageMatchesSource:
 
     def test_skill_md_matches(self) -> None:
         if not os.path.isfile(SKILL_PACKAGE):
-            pytest.skip("hermes-forgecode.skill not built yet")
+            pytest.skip("hermes-gemini.skill not built yet")
 
         source_path = os.path.join(SKILL_ROOT, "SKILL.md")
         with open(source_path, "r") as f:
@@ -97,12 +97,12 @@ class TestSkillPackageMatchesSource:
 
         assert source_content == pkg_content, (
             "SKILL.md in the package differs from the source. Rebuild: "
-            "cd hermes-forgecode && zip -r ./hermes-forgecode.skill SKILL.md references/"
+            "cd hermes-gemini && zip -r ../hermes-gemini.skill SKILL.md references/"
         )
 
     def test_cli_reference_matches(self) -> None:
         if not os.path.isfile(SKILL_PACKAGE):
-            pytest.skip("hermes-forgecode.skill not built yet")
+            pytest.skip("hermes-gemini.skill not built yet")
 
         source_path = os.path.join(SKILL_ROOT, "references", "cli-reference.md")
         with open(source_path, "r") as f:
@@ -117,7 +117,7 @@ class TestSkillPackageMatchesSource:
 
     def test_agent_patterns_matches(self) -> None:
         if not os.path.isfile(SKILL_PACKAGE):
-            pytest.skip("hermes-forgecode.skill not built yet")
+            pytest.skip("hermes-gemini.skill not built yet")
 
         source_path = os.path.join(SKILL_ROOT, "references", "agent-patterns.md")
         with open(source_path, "r") as f:
@@ -136,10 +136,10 @@ class TestSkillPackageRebuild:
 
     def test_rebuild_produces_valid_package(self, tmp_path) -> None:
         """Run the documented rebuild command and verify the output."""
-        output_file = tmp_path / "hermes-forgecode.skill"
+        output_file = tmp_path / "hermes-gemini.skill"
 
         # The documented rebuild command from AGENTS.md:
-        # cd hermes-forgecode && zip -r ../hermes-forgecode.skill SKILL.md references/
+        # cd hermes-gemini && zip -r ../hermes-gemini.skill SKILL.md references/
         result = subprocess.run(
             ["zip", "-r", str(output_file), "SKILL.md", "references/"],
             cwd=SKILL_ROOT,

@@ -45,7 +45,7 @@ class TestFrontmatter:
     def test_has_name(self, skill_data) -> None:
         metadata, _ = skill_data
         assert "name" in metadata, "Frontmatter missing 'name' field"
-        assert metadata["name"] == "hermes-forgecode"
+        assert metadata["name"] == "hermes-gemini"
 
     def test_has_description(self, skill_data) -> None:
         metadata, _ = skill_data
@@ -57,14 +57,14 @@ class TestFrontmatter:
         """Description should include trigger keywords for agent discovery."""
         metadata, _ = skill_data
         desc = metadata["description"].lower()
-        keywords = ["forge", "forgecode", "coding agent"]
+        keywords = ["gemini", "gemini-cli", "coding agent"]
         missing = [kw for kw in keywords if kw not in desc]
         assert not missing, f"Description missing trigger keywords: {missing}"
 
     def test_has_license(self, skill_data) -> None:
         metadata, _ = skill_data
         assert "license" in metadata, "Frontmatter missing 'license' field"
-        assert metadata["license"] == "MIT"
+        assert metadata["license"] == "Apache-2.0"
 
     def test_has_compatibility(self, skill_data) -> None:
         metadata, _ = skill_data
@@ -109,8 +109,14 @@ class TestSkillMdStructure:
     def test_has_interactive_tui_mode(self, skill_body) -> None:
         assert "### Mode 2: Interactive TUI" in skill_body, "Missing '### Mode 2: Interactive TUI' section"
 
-    def test_has_built_in_agents_section(self, skill_body) -> None:
-        assert "## Built-In Agents" in skill_body, "Missing '## Built-In Agents' section"
+    def test_has_json_output_mode(self, skill_body) -> None:
+        assert "### Mode 3: JSON Output" in skill_body, "Missing '### Mode 3: JSON Output' section"
+
+    def test_has_stream_json_mode(self, skill_body) -> None:
+        assert "### Mode 4: Stream JSON" in skill_body, "Missing '### Mode 4: Stream JSON' section"
+
+    def test_has_approval_modes_section(self, skill_body) -> None:
+        assert "## Approval Modes" in skill_body, "Missing '## Approval Modes' section"
 
     def test_has_workflows_section(self, skill_body) -> None:
         assert "## Common Workflows" in skill_body, "Missing '## Common Workflows' section"
@@ -128,28 +134,28 @@ class TestSkillMdStructure:
         assert "## Pitfalls & Gotchas" in skill_body, "Missing '## Pitfalls & Gotchas' section"
 
     def test_has_parallel_work_section(self, skill_body) -> None:
-        assert "## Parallel Work" in skill_body or "git worktree" in skill_body.lower(), (
-            "Missing parallel work / git worktree section"
+        assert "## Parallel Work" in skill_body or "worktree" in skill_body.lower(), (
+            "Missing parallel work / worktree section"
         )
 
     def test_has_recommended_workflow(self, skill_body) -> None:
         assert "## Recommended Workflow" in skill_body, "Missing '## Recommended Workflow' section"
 
-    def test_mentions_forge_agent(self, skill_body) -> None:
-        assert "forge" in skill_body.lower()
+    def test_mentions_gemini(self, skill_body) -> None:
+        assert "gemini" in skill_body.lower()
 
-    def test_mentions_sage_agent(self, skill_body) -> None:
-        assert "sage" in skill_body.lower()
+    def test_mentions_approval_mode(self, skill_body) -> None:
+        assert "approval-mode" in skill_body.lower()
 
-    def test_mentions_muse_agent(self, skill_body) -> None:
-        assert "muse" in skill_body.lower()
+    def test_mentions_plan_mode(self, skill_body) -> None:
+        assert "plan" in skill_body.lower()
 
-    def test_mentions_forge_dash_p(self, skill_body) -> None:
+    def test_mentions_gemini_dash_p(self, skill_body) -> None:
         """The one-shot flag '-p' should be prominently documented."""
-        assert "forge -p" in skill_body or 'forge -p "' in skill_body or "forge -p '" in skill_body
+        assert "gemini -p" in skill_body or 'gemini -p "' in skill_body or "gemini -p '" in skill_body
 
-    def test_mentions_conversation_id(self, skill_body) -> None:
-        assert "--conversation-id" in skill_body, "Missing --conversation-id flag documentation"
+    def test_mentions_resume(self, skill_body) -> None:
+        assert "--resume" in skill_body, "Missing --resume flag documentation"
 
     def test_mentions_sandbox(self, skill_body) -> None:
         assert "--sandbox" in skill_body, "Missing --sandbox flag documentation"
@@ -157,11 +163,11 @@ class TestSkillMdStructure:
     def test_mentions_tmux(self, skill_body) -> None:
         assert "tmux" in skill_body.lower(), "Missing tmux documentation"
 
-    def test_mentions_forge_toml(self, skill_body) -> None:
-        assert ".forge.toml" in skill_body, "Missing .forge.toml configuration reference"
+    def test_mentions_settings_json(self, skill_body) -> None:
+        assert "settings.json" in skill_body, "Missing settings.json configuration reference"
 
-    def test_mentions_agents_md(self, skill_body) -> None:
-        assert "AGENTS.md" in skill_body, "Missing AGENTS.md reference"
+    def test_mentions_gemini_md(self, skill_body) -> None:
+        assert "GEMINI.md" in skill_body, "Missing GEMINI.md reference"
 
 
 class TestReferenceLinks:
@@ -210,9 +216,9 @@ class TestReferenceFileContent:
             content = f.read()
         assert len(content) > 500, "agent-patterns.md seems too short"
         # Should document the key patterns
-        assert "sage" in content.lower()
-        assert "muse" in content.lower()
-        assert "forge" in content.lower()
+        assert "plan" in content.lower()
+        assert "gemini" in content.lower()
+        assert "implement" in content.lower()
 
 
 class TestSkillMdSize:
@@ -251,20 +257,20 @@ class TestCodeExamples:
         # Find all python code blocks
         python_blocks = re.findall(r"```python\n(.*?)```", skill_body, re.DOTALL)
         for block in python_blocks:
-            if "forge" in block and "def " not in block:
-                # Non-function blocks that reference forge should use computer(action="bash", ...)
+            if "gemini" in block and "def " not in block:
+                # Non-function blocks that reference gemini should use computer(action="bash", ...)
                 # or subprocess patterns — both are valid
                 assert (
                     'computer(action="bash"' in block
                     or "subprocess" in block
                 ), (
-                    f"Python code block references forge but doesn't use "
+                    f"Python code block references gemini but doesn't use "
                     f"computer(action='bash', ...) or subprocess pattern:\n{block[:200]}"
                 )
 
-    def test_forge_commit_examples(self, skill_body) -> None:
-        """Verify forge commit examples use documented flags."""
-        if "forge commit" in skill_body:
-            assert "--preview" in skill_body, (
-                "forge commit is mentioned but --preview flag is not documented"
+    def test_git_commit_pattern(self, skill_body) -> None:
+        """Verify AI git commit uses the pipe pattern (no built-in commit command)."""
+        if "git diff" in skill_body:
+            assert "gemini -p" in skill_body, (
+                "git diff pattern should pipe to gemini -p for commit messages"
             )

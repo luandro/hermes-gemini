@@ -1,213 +1,227 @@
-# Forge CLI Reference
+# Gemini CLI Reference
 
 ## Global Flags
 
-| Flag | Description |
-|------|-------------|
-| `-p, --prompt <PROMPT>` | One-shot prompt, exits after completion |
-| `-e, --event <EVENT>` | Dispatch a JSON event to the workflow |
-| `--conversation <FILE>` | Load conversation from a JSON file |
-| `--conversation-id <ID>` | Resume an existing conversation by ID |
-| `--agent <AGENT>` | Specify agent ID for the session (`forge`, `sage`, `muse`, or custom) |
-| `-C, --directory <DIR>` | Change to this directory before starting |
-| `--sandbox <NAME>` | Create isolated git worktree + branch for experimentation |
-| `--verbose` | Enable verbose logging |
+| Flag | Short | Description |
+|------|-------|-------------|
+| `--prompt <TEXT>` | `-p` | One-shot prompt, exits after completion |
+| `--model <MODEL>` | `-m` | Model selection: `auto`, `auto-2.5`, or specific model name |
+| `--sandbox` | `-s` | Enable container-based sandbox isolation |
+| `--approval-mode <MODE>` | — | Set approval mode: `default`, `auto_edit`, `plan`, `yolo` |
+| `--yolo` | — | Shortcut for `--approval-mode=yolo` (CLI only) |
+| `--output-format <FMT>` | — | Output format: `text` (default), `json`, `stream-json` |
+| `--resume <ID>` | — | Resume session: `"latest"` or session ID |
+| `--worktree` | `-w` | Run in a git worktree (experimental, requires settings) |
+| `--include-directories <DIR>` | — | Additional directories to include in context |
+| `--debug` | — | Enable debug logging |
+| `--version` | — | Print version and exit |
+| `--help` | — | Print help and exit |
 
-## Subcommands
+## Slash Commands
 
-### Conversation Management
+Comprehensive list of in-REPL slash commands:
 
-```bash
-forge conversation list                    # List all conversations
-forge conversation resume <id>             # Resume by ID (opens interactive TUI; for scripting use: forge --conversation-id <id> -p "...")
-forge conversation new                     # Start fresh conversation
-forge conversation dump <id>               # Dump conversation to JSON
-forge conversation compact <id>            # Compress conversation history
-forge conversation retry <id>              # Retry the last message
-forge conversation clone <id>              # Clone a conversation
-forge conversation rename <id> <name>      # Rename a conversation
-forge conversation delete <id>             # Delete a conversation
-forge conversation info <id>               # Show conversation metadata
-forge conversation stats                   # Show usage statistics
-forge conversation show <id>               # Show conversation messages
+| Command | Description |
+|---------|-------------|
+| `/about` | Show Gemini CLI version and info |
+| `/agents` | List and manage subagents (built-in: `codebase_investigator`, `cli_help`) |
+| `/auth` | Manage authentication (OAuth, API key, Vertex AI) |
+| `/bug` | Report a bug |
+| `/chat` | Start a new chat session |
+| `/clear` | Clear conversation history |
+| `/commands` | List and run custom commands (`.toml` files in `~/.gemini/commands/` or `.gemini/commands/`) |
+| `/compress` | Compress conversation context |
+| `/copy` | Copy last response to clipboard |
+| `/dir` | Show current working directory |
+| `/extensions` | Manage extensions (`gemini extensions install/list/enable/disable`) |
+| `/help` | Show help |
+| `/hooks` | Manage BeforeTool/AfterTool hooks |
+| `/ide` | IDE integration settings |
+| `/init` | Initialize GEMINI.md in current project |
+| `/mcp` | Manage MCP servers (configured in settings.json `mcpServers`) |
+| `/memory` | View and manage GEMINI.md memory files |
+| `/model` | Show or switch model (`/model auto`, `/model flash`, etc.) |
+| `/permissions` | Manage tool permissions |
+| `/plan` | Toggle plan mode (read-only research + planning) |
+| `/policies` | Manage TOML policy files in `~/.gemini/policies/` |
+| `/privacy` | Privacy settings |
+| `/quit` | Exit Gemini CLI |
+| `/restore` | Restore to a checkpoint (requires `general.checkpointing.enabled: true`) |
+| `/rewind` | Rewind conversation (or double-press Esc) |
+| `/resume` | Resume a previous session |
+| `/settings` | View and edit settings.json |
+| `/shells` | Manage shell sessions |
+| `/skills` | List and manage skills (`.gemini/skills/`) |
+| `/stats` | Show session statistics |
+| `/theme` | Change UI theme |
+| `/tools` | List available tools |
+| `/upgrade` | Check for and install updates |
+| `/vim` | Toggle vim keybindings |
+
+## @ Commands
+
+Reference files and paths inline in prompts:
+
+| Syntax | Description |
+|--------|-------------|
+| `@file.py` | Include file content in prompt |
+| `@src/dir/` | Include directory listing |
+| `@./path/to/file` | Relative path reference |
+
+## Shell Passthrough
+
+Prefix with `!` to run shell commands without leaving the REPL:
+
+```
+!git status
+!npm test
+!python -m pytest
 ```
 
-### Git Integration
+## Model Selection
 
-```bash
-forge commit                               # AI-generated commit message
-forge commit --preview                     # Preview commit message before committing
-forge commit "context hint"                # Pass context to guide commit message
-forge suggest "find large log files"       # Suggest shell command for a task
+| Value | Description |
+|-------|-------------|
+| `auto` | Gemini 3 — automatic routing (Pro for planning, Flash for implementation) |
+| `auto-2.5` | Gemini 2.5 — same routing logic with 2.5 models |
+| `gemini-2.5-pro` | Manual — Gemini 2.5 Pro |
+| `gemini-2.5-flash` | Manual — Gemini 2.5 Flash (faster, cheaper) |
+| `gemini-2.5-flash-lite` | Manual — Gemini 2.5 Flash Lite (fastest, cheapest) |
+
+Use `--model` flag or `/model` command to switch. `auto` recommended for most use cases.
+
+## settings.json Reference
+
+Located at `~/.gemini/settings.json` (user-level) or `.gemini/settings.json` (project-level).
+
+### General Section
+
+```json
+{
+  "general": {
+    "defaultApprovalMode": "default",
+    "plan": {
+      "enabled": true,
+      "directory": ".gemini/plans",
+      "modelRouting": true
+    },
+    "checkpointing": {
+      "enabled": true
+    }
+  }
+}
 ```
 
-### Agent & Provider Management
+### Model Section
 
-```bash
-forge list model                           # List available models
-forge list agent                           # List available agents (built-in + custom)
-forge list tool --agent <id>               # List tools/skills available to an agent
-forge provider login                       # Authenticate a provider
-forge provider logout                      # Remove provider credentials
-forge provider list                        # List configured providers
+```json
+{
+  "model": {
+    "name": "auto"
+  }
+}
 ```
 
-### MCP Servers
+### Tools Section
 
-```bash
-forge mcp list                             # List connected MCP servers
-forge mcp import <file>                    # Import MCP config from file
-forge mcp show <name>                      # Show server details
-forge mcp remove <name>                    # Remove a server
-forge mcp reload                           # Reload all servers
+```json
+{
+  "tools": {
+    "sandbox": true
+  }
+}
 ```
 
-### Workspace (Semantic Search)
+### Experimental Section
 
-```bash
-forge workspace sync                       # Sync codebase for semantic search
-forge workspace init                       # Initialize workspace index
-forge workspace status                     # Show indexing status
-forge workspace query "search term"        # Run semantic search
+```json
+{
+  "experimental": {
+    "worktrees": true
+  }
+}
 ```
 
-### Diagnostics
+### Hooks Section
 
-```bash
-forge info                                 # Show forge version and config
-forge doctor                               # Check installation health
-forge update                               # Update forge to latest version
-forge setup                                # Install ZSH plugin
+```json
+{
+  "hooks": {
+    "BeforeTool": [
+      {
+        "matcher": "edit_file",
+        "hooks": [{"type": "command", "command": "echo 'Editing file'"}]
+      }
+    ],
+    "AfterTool": [
+      {
+        "matcher": "run_shell_command",
+        "hooks": [{"type": "command", "command": "notify-send 'Shell command executed'"}]
+      }
+    ]
+  }
+}
 ```
 
-### Custom Commands
+### UI Section
 
-```bash
-forge cmd list                             # List all custom commands
-forge cmd run <name>                       # Run a named custom command
+```json
+{
+  "ui": {
+    "theme": "dark"
+  }
+}
 ```
 
-### Data Processing
+### Output Section
 
-```bash
-forge data                                 # Process JSONL data through LLM with schema-constrained tools
+```json
+{
+  "output": {
+    "format": "text"
+  }
+}
 ```
 
-`forge data` is useful for batch agent orchestration with structured output — it streams JSONL records through the agent and produces structured results.
+### Privacy Section
 
-## ZSH Plugin (Interactive Shell Only)
-
-Once installed via `forge setup`, these shortcuts work at the ZSH prompt:
-
-| Shortcut | Equivalent | Description |
-|----------|------------|-------------|
-| `: <prompt>` | `forge -p "<prompt>"` | Run default (forge) agent |
-| `:ask <prompt>` | `forge --agent sage -p "<prompt>"` | Research with sage |
-| `:plan <prompt>` | `forge --agent muse -p "<prompt>"` | Plan with muse |
-| `:commit` | `forge commit` | AI git commit |
-| `:suggest <desc>` | `forge suggest "<desc>"` | Suggest shell command |
-| `:new` | `forge conversation new` | Start fresh conversation |
-| `:agent <name>` | Switch active agent (fzf picker if no name) |
-| `:skill` | List available skills |
-
-**Note**: ZSH plugin does NOT work in non-interactive shells or scripts — use full `forge` commands instead.
-
-### forge zsh subcommands
-
-```bash
-forge zsh setup      # Install ZSH plugin
-forge zsh doctor     # Diagnose shell integration issues (run this first when troubleshooting)
-forge zsh plugin     # Manage plugin settings
-forge zsh theme      # Configure prompt theme
-forge zsh rprompt    # Configure right-side prompt
+```json
+{
+  "privacy": {
+    "analytics": false
+  }
+}
 ```
 
-## Custom Agents
+### Billing Section
 
-Define custom agents as `.md` files with YAML front-matter:
-
-**Location (highest precedence first):**
-1. `.forge/agents/<name>.md` — project-local
-2. `~/forge/agents/<name>.md` — global
-
-**Format:**
-```markdown
----
-name: reviewer
-description: Code reviewer focused on security and performance
-model: claude-3.7-sonnet
----
-
-You are a strict code reviewer. Focus on:
-- Security vulnerabilities
-- Performance bottlenecks  
-- Missing error handling
-- Test coverage gaps
-
-Always provide specific line references and suggest concrete fixes.
+```json
+{
+  "billing": {
+    "enabled": true
+  }
+}
 ```
 
-**Use custom agent:**
-```bash
-forge --agent reviewer -p "Review the changes in src/auth/"
-```
+## Environment Variables
 
-## Skills
+| Variable | Description |
+|----------|-------------|
+| `GEMINI_API_KEY` | Gemini API key for authentication |
+| `GOOGLE_API_KEY` | Alternative API key env var |
+| `GOOGLE_GENAI_USE_VERTEXAI` | Set to `true` to use Vertex AI instead of Gemini API |
+| `GOOGLE_CLOUD_PROJECT` | Google Cloud project ID (required for Vertex AI) |
+| `GEMINI_SANDBOX` | Force sandbox method: `docker`, `podman`, `seatbelt`, `gvisor`, `lxc` |
+| `GEMINI_SANDBOX_IMAGE` | Custom container image for sandbox |
+| `SANDBOX_MOUNTS` | Additional mount paths for sandbox |
+| `SANDBOX_FLAGS` | Additional flags for sandbox runtime |
+| `DEBUG` | Set to `true` for debug logging |
+| `GEMINI_CLI_SYSTEM_DEFAULTS_PATH` | Custom path for system defaults |
+| `GEMINI_CLI_SYSTEM_SETTINGS_PATH` | Custom path for system settings |
 
-Skills are reusable workflows the AI can invoke as tools.
+## MCP Configuration
 
-**Built-in skills** vary by version — list what's installed:
-```bash
-forge list skill
-```
-
-**Skill locations (highest precedence first):**
-1. `.forge/skills/<name>/SKILL.md` — project-local
-2. `~/forge/skills/<name>/SKILL.md` — global
-3. Built-in (embedded in binary)
-
-**Invoke a skill explicitly:**
-```bash
-forge -p "Generate a PR description using the github-pr-description skill"
-```
-
-Note: The ZSH `: skill-name` shorthand only works in interactive shells.
-
-## .forge.toml Configuration
-
-Full reference for `.forge.toml` (project root or `~/forge/.forge.toml`):
-
-```toml
-[session]
-model = "claude-3.7-sonnet"              # Default model
-temperature = 0.7                        # Response creativity (0.0-1.0)
-
-[agent]
-max_walker_depth = 3                     # Directory traversal depth
-max_tool_failure_per_turn = 3            # Failures before forcing turn completion
-max_requests_per_turn = 100             # Max LLM requests per turn (then prompts to continue)
-custom_instructions = """               # Persistent instructions for all agents
-1. Always add error handling.
-2. Use conventional commits.
-3. Run tests after changes.
-"""
-```
-
-Custom commands are managed via `forge cmd`, not inline config. Use `forge cmd list` to see available commands.
-
-## Machine-Readable Output (--porcelain)
-
-Several subcommands support `--porcelain` for clean, parseable output without ANSI codes or decorations. Use this when parsing forge output programmatically:
-
-```bash
-forge list agent --porcelain
-forge list model --porcelain
-forge list skill --porcelain
-forge mcp list --porcelain
-forge provider list --porcelain
-```
-
-## MCP Configuration (.mcp.json)
+Configured in settings.json under the `mcpServers` key:
 
 ```json
 {
@@ -228,16 +242,71 @@ forge provider list --porcelain
 }
 ```
 
-## Environment Variables
+Manage via `/mcp` command in REPL.
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `FORGE_TOOL_TIMEOUT` | 300 | Max seconds a tool runs before termination |
-| `FORGE_HTTP_READ_TIMEOUT` | 900 | HTTP read timeout (15min — good for long tasks) |
-| `FORGE_RETRY_MAX_ATTEMPTS` | 3 | API retry count on transient errors |
-| `FORGE_MAX_REQUESTS_PER_TURN` | 100 | Max LLM requests per turn (mirrors .forge.toml) |
-| `FORGE_SESSION__MODEL_ID` | — | Override model for the session (e.g. `haiku`, `sonnet`). Maps to `[session] model` in `.forge.toml`. |
-| `FORGE_SESSION__PROVIDER_ID` | — | Override provider (e.g. `open_router`, `anthropic`). The `SECTION__KEY` double-underscore maps to `[SECTION]` + `key` in `.forge.toml`. |
-| `FORGE_WORKSPACE_SERVER_URL` | — | Self-hosted semantic search server URL |
-| `FORGE_TRACKER` | true | Set to `false` to disable telemetry |
-| `FORGE_LOG` | — | Log verbosity (e.g., `forge=info`, `forge=debug`). First thing to set when troubleshooting. |
+## Exit Codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Success |
+| `1` | Error |
+| `42` | Input error |
+| `53` | Turn limit exceeded |
+
+## Authentication Methods
+
+### 1. Google OAuth (Free Tier)
+
+Run `gemini` to trigger OAuth flow. Uses Google account. Rate limits: 60 req/min, 1000 req/day.
+
+### 2. Gemini API Key
+
+Set `GEMINI_API_KEY` environment variable. Get key from [Google AI Studio](https://aistudio.google.com/). Rate limit: 1000 req/day.
+
+### 3. Vertex AI
+
+Set environment variables:
+```bash
+export GOOGLE_GENAI_USE_VERTEXAI=true
+export GOOGLE_CLOUD_PROJECT=your-project-id
+```
+
+Requires Google Cloud authentication (`gcloud auth application-default login`).
+
+## Subagents
+
+Built-in subagents:
+- `codebase_investigator` — deep codebase exploration
+- `cli_help` — CLI usage help
+
+Custom subagents: `.gemini/agents/` directory. Manage via `/agents` command.
+
+## Skills
+
+Skills are reusable workflows the AI can invoke as tools.
+
+**Skill locations:**
+1. `.gemini/skills/<name>/SKILL.md` — project-local
+2. `~/.gemini/skills/<name>/SKILL.md` — global
+
+Manage via `/skills` command or `gemini skills` subcommands.
+
+## Custom Commands
+
+`.toml` files in `~/.gemini/commands/` or `.gemini/commands/`. Manage via `/commands` command.
+
+## Extensions
+
+Install and manage extensions:
+```bash
+gemini extensions install <name>
+gemini extensions list
+gemini extensions enable <name>
+gemini extensions disable <name>
+```
+
+Manage via `/extensions` command in REPL.
+
+## Policy Engine
+
+TOML policy files in `~/.gemini/policies/`. Manage via `/policies` command. Controls tool permissions and restrictions.

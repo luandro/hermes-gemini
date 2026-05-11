@@ -1,7 +1,7 @@
 """Tests that all executables referenced by the skill are available and functional.
 
 The skill references these executables in SKILL.md and AGENTS.md:
-- forge (required)
+- gemini (required)
 - tmux (optional, for interactive sessions)
 - git (optional, for worktree patterns)
 - zip / unzip (for building the .skill package)
@@ -15,7 +15,7 @@ import pytest
 
 # --- Required executables (skill won't work without these) ---
 
-REQUIRED_EXECUTABLES = ["forge", "git", "zip", "unzip"]
+REQUIRED_EXECUTABLES = ["gemini", "git", "zip", "unzip"]
 
 # --- Optional executables (used for specific features) ---
 
@@ -38,35 +38,22 @@ class TestRequiredExecutables:
             pytest.skip(f"Optional executable '{exe}' not found on PATH")
 
 
-class TestForgeBinary:
-    """Basic smoke tests for the forge binary itself."""
+class TestGeminiBinary:
+    """Basic smoke tests for the gemini binary itself."""
 
-    def test_forge_version_runs(self) -> None:
+    def test_gemini_version_runs(self) -> None:
         result = subprocess.run(
-            ["forge", "--version"], capture_output=True, text=True, timeout=10
+            ["gemini", "--version"], capture_output=True, text=True, timeout=10
         )
-        assert result.returncode == 0, f"forge --version failed: {result.stderr}"
-        assert result.stdout.strip(), "forge --version produced no output"
+        assert result.returncode == 0, f"gemini --version failed: {result.stderr}"
+        assert result.stdout.strip(), "gemini --version produced no output"
 
-    def test_forge_help_runs(self) -> None:
+    def test_gemini_help_runs(self) -> None:
         result = subprocess.run(
-            ["forge", "--help"], capture_output=True, text=True, timeout=10
+            ["gemini", "--help"], capture_output=True, text=True, timeout=10
         )
-        assert result.returncode == 0, f"forge --help failed: {result.stderr}"
-        assert "Usage:" in result.stdout, "forge --help output missing 'Usage:'"
-
-    def test_forge_info_runs(self) -> None:
-        result = subprocess.run(
-            ["forge", "info"], capture_output=True, text=True, timeout=10
-        )
-        assert result.returncode == 0, f"forge info failed: {result.stderr}"
-
-    def test_forge_doctor_runs(self) -> None:
-        result = subprocess.run(
-            ["forge", "doctor"], capture_output=True, text=True, timeout=30
-        )
-        assert result.returncode == 0, f"forge doctor failed: {result.stderr}"
-        assert "FORGE" in result.stdout.upper() or "diagnostics" in result.stdout.lower()
+        assert result.returncode == 0, f"gemini --help failed: {result.stderr}"
+        assert "Usage:" in result.stdout or "usage" in result.stdout.lower(), "gemini --help output missing usage info"
 
 
 class TestTmuxBinary:
@@ -85,7 +72,7 @@ class TestTmuxBinary:
         assert "tmux" in result.stdout.lower()
 
     def test_tmux_create_and_kill_session(self, tmux_available) -> None:
-        session_name = "test_hermes_forgecode"
+        session_name = "test_hermes_gemini"
         try:
             # Create a detached session
             subprocess.run(
