@@ -169,6 +169,7 @@ DEBUG=true                        # Debug logging
 
 ## Related Skills
 
+- [forgecode](https://github.com/luandro/hermes-forgecode) -- delegate to Forge CLI
 - [claude-code](https://github.com/NousResearch/hermes-agent/tree/main/skills/autonomous-ai-agents/claude-code) -- delegate to Claude Code CLI
 - [codex](https://github.com/NousResearch/hermes-agent/tree/main/skills/autonomous-ai-agents/codex) -- delegate to OpenAI Codex CLI
 - [opencode](https://github.com/NousResearch/hermes-agent/tree/main/skills/autonomous-ai-agents/opencode) -- delegate to OpenCode CLI
